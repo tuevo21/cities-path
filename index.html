@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Directions service</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+      #block1 {
+	float: left;
+	width: 80%;
+	height: 100%;
+      }
+      #block2 {
+	float: right;
+	text-align: right;
+	width: 20%;
+	height: 100%;
+      }
+    </style>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script>
+      var arr = [];
+      var directionsService;
+      var directionsDisplay;
+      var cities = [];
+      cities['Boston'] = new google.maps.LatLng(42.36, -71.05);
+      cities['NewYork'] = new google.maps.LatLng(40.73, -74);
+      cities['Chicago'] = new google.maps.LatLng(41.83, -87.63);
+      cities['LosAngeles'] = new google.maps.LatLng(34, -118.22);
+
+      function initMap() {
+        directionsService = new google.maps.DirectionsService;
+        directionsDisplay = new google.maps.DirectionsRenderer;
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 7,
+          center: {lat: 41.85, lng: -87.65}
+        });
+        directionsDisplay.setMap(map);
+
+      google.maps.event.addListener(map, "click", function (event) {
+	    var lat = event.latLng.lat();
+	    var lng = event.latLng.lng();
+	    arr.push(new google.maps.LatLng(lat, lng));
+	    console.log( lat + ', ' + lng );
+	    new google.maps.Marker({
+		      position: { lat: lat, lng: lng }
+		     ,map: map  
+		     ,Draggable: true           
+		    });		    
+	    document.getElementById("records").innerHTML += 'new location added <br>';
+	});
+       }
+
+       function showPaths() {
+		for (var i=0; i < arr.length-1; i++) {
+        		var dD = new google.maps.DirectionsRenderer({map:map, preserveViewport:true});
+			calculateAndDisplayRoute(directionsService, dD, arr[i], arr[i+1]);
+		} 
+       }
+
+       function addLocation() {
+		var selectedCity = document.getElementById("city");
+		var cityName = selectedCity.options[selectedCity.selectedIndex].value;
+		arr.push(cities[cityName]);
+		new google.maps.Marker({
+			position: cities[cityName]
+			,map: map
+			,Draggable: false
+		});
+	    document.getElementById("records").innerHTML += 'new location added <br>';
+       }
+
+      function calculateAndDisplayRoute(directionsService, directionsDisplay, position1, position2) {
+        directionsService.route({
+          origin: position1,
+          destination: position2,
+          travelMode: google.maps.TravelMode.DRIVING
+        }, function(response, status) {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsDisplay.setDirections(response);
+          } else {
+            window.alert('Directions request failed due to ' + status);
+          }
+        });
+      }
+    </script>
+
+  </head>
+  <body onload="initMap()">
+    <div id="block1">
+	    <div id="map"></div>
+    </div>
+    <div id="block2">
+	    <h4>
+		See the path to travel through multiple cities!
+	    </h4>
+	    <p>
+		Click on locations in the map to build a path. Alternatively, choose city from the bar. 
+	    </p>
+	    <select id="city">
+		<option selected disabled>Choose a city</option>
+		<option value="Boston">Boston</option>
+		<option value="NewYork">New York</option>
+		<option value="LosAngeles">Los Angeles</option>
+		<option value="Chicago">Chicago</option>
+	    </select><br>
+	    <button onclick="addLocation()"> Add location </button>
+	    <p id="records"></p>
+
+	    <br><br>
+	    <button onclick="showPaths()"> Show paths </button>
+    </div>
+  </body>
+</html>
